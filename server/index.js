@@ -19,6 +19,20 @@ const io = socketIo(server, {
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// Trust Heroku reverse proxy so we can detect protocol
+app.enable('trust proxy');
+
+// Redirect HTTP to HTTPS in production
+if (process.env.NODE_ENV === 'production') {
+  app.use((req, res, next) => {
+    if (req.headers['x-forwarded-proto'] !== 'https') {
+      return res.redirect(`https://${req.headers.host}${req.url}`);
+    }
+    return next();
+  });
+}
+
 app.use(express.static(path.join(__dirname, '../client/build')));
 
 // In-memory storage for lobbies
